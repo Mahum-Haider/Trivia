@@ -199,7 +199,7 @@ def create_app(test_config=None):
   '''
 
   '''
-  @TODO: 
+  @TODO: PARTIALLY - DONE
   Create a GET endpoint to get questions based on category. 
 
   TEST: In the "List" tab / main screen, clicking on one of the 

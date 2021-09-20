@@ -139,9 +139,9 @@ def create_app(test_config=None):
         return jsonify(
           {
             "success": True,
-            "questions": current_questions,
+            "created": question.id,
+            "books": current_questions,
             "total_questions": len(Question.query.all()),
-            "categories": categories,
           }
         )
 
@@ -174,38 +174,33 @@ def create_app(test_config=None):
 
 
   #Create a POST endpoint to get questions to play the quiz. 
-  @app.route("/questions", methods=["POST"])
+  @app.route("/quizzes", methods=["POST"])
   def quiz_question():
     body = request.get_json()
+    previousQuestions = body.get('previousQuestions', None)
+    quizCategory = body.get('quizCategory', None)
 
-    previous_questions = body.get('question', None)
-    quiz_category = body.get('quiz_category', None)
-
-    if quiz_category:
-        if quiz_category['id'] == 0:
-          quiz = Question.query.all()
-        else:
-          quiz = Question.query.filter_by(category = quiz_category['id']).all()
+    if quizCategory:
+      if quizCategory['id'] == 0:
+        quiz = Question.query.all()
+      else:
+        quiz = Question.query.filter_by(category=quizCategory['id']).all()
     if not quiz:
-        abort(422)
-
-
+      abort(422)
     selected = []
     for question in quiz:
-      if question.id not in previous_questions:
+      if question.id not in previousQuestions:
         selected.append(question.format())
-
     if len(selected) != 0:
       result = random.choice(selected)
       return jsonify({
         'question': result
       })
-
     else:
       return jsonify({
         'question': False
       })
-      
+
 
 
   # Create error handlers for all expected errors including 404 and 422. 

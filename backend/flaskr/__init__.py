@@ -46,16 +46,22 @@ def create_app(test_config=None):
   #Create an endpoint to handle GET requests for all available categories.
   @app.route("/categories", methods=['GET'])
   def retrieve_categories():
-    categories = Category.query.order_by(Category.type).all()
+    categories = Category.query.all()
+    categories_dict = {}
+    for category in categories:
+      categories_dict[category.id] = category.type
 
-    if len(categories) == 0:
+    # abort 404 if no categories found
+    if (len(categories_dict) == 0):
       abort(404)
 
-    return jsonify ({
-      "success": True,
-      "categories": {category.id : category.type for category in categories},
+    # return data to view
+    return jsonify({
+      'success': True,
+      # 'categories': categories_dict
+      "categories": {category.id: category.type for category in categories}
+      # 'total_categories': len(Category.query.all())
     })
-
 
 
   #Create an endpoint to handle GET requests for questions, 
@@ -64,15 +70,24 @@ def create_app(test_config=None):
     selection = Question.query.order_by(Question.id).all()
     current_questions = paginate_questions(request, selection)
 
-    categories = Category.query.order_by(Category.type).all()
+    # categories = Category.query.order_by(Category.type).all()
+    categories = Category.query.all()
+    categories_dict = {}
+    for category in categories:
+      categories_dict[category.id] = category.type
 
+    # abort 404 if no questions
     if len(current_questions) == 0:
       abort(404)
 
     return jsonify({
       "success": True,
       "questions": current_questions,
-      "total_questions": len(Question.query.all())
+      #MENTOR SUGGESTED, DID NOT WORK -  "total_questions": len(selection)
+      "total_questions": len(Question.query.all()),
+      #DID NOT WORK -  'categories': categories_dict
+      "categories": {category.id: category.type for category in categories},
+      "current_category": None
     })
 
 
@@ -125,7 +140,8 @@ def create_app(test_config=None):
           {
             "success": True,
             "questions": current_questions,
-            "total_questions": len(selection.all()),
+            # "total_questions": len(selection.all())
+            "total_questions": len(Question.query.all())
           }
         )
 
@@ -140,7 +156,7 @@ def create_app(test_config=None):
           {
             "success": True,
             "created": question.id,
-            "books": current_questions,
+            "questions": current_questions,
             "total_questions": len(Question.query.all()),
           }
         )
@@ -151,55 +167,56 @@ def create_app(test_config=None):
 
 
   #Create a GET endpoint to get questions based on category.
-  @app.route("/categories/<int:categories_id>/questions", methods=['GET'])
-  def get_question_by_category(category_id):
-    category = Category.query.get(id)
-    if (category is None):
-      abort(404)
+  @app.route('/categories/<int:id>/questions')
+  def get_question_by_category(id):
+    # Get category by id, try get questions from matching category
+    category = Category.query.filter_by(id=id).one_or_none()
 
     try:
-      question = Question.query.filter(Question.category == str(category_id)).all()
+      selection = Question.query.filter_by(category=category.id).all()
+      # paginate selected questions and return results
       current_questions = paginate_questions(request, selection)
 
       return jsonify({
         "success": True,
         "questions": current_questions,
         "total_questions": len(Question.query.all()),
-        "current_category": category_id
+        # "current_category": category_id
+        "current_category": category.type
+        # "categories": {category.id: category.type for category in categories}
       })
 
     except:
       abort(422)
 
 
+    # Create a POST endpoint to get questions to play the quiz.
+  @app.route('/quizzes', methods=['POST'])
+  def get_quizzes():
+        # This endpoint should take category and previous question parameters
+    try:
+      body = request.get_json()
+      previous_questions = body.get('previous_questions', None)
+      quiz_category = body.get('quiz_category', None)
+      category_id = quiz_category['id']
 
-  #Create a POST endpoint to get questions to play the quiz. 
-  @app.route("/quizzes", methods=["POST"])
-  def quiz_question():
-    body = request.get_json()
-    previousQuestions = body.get('previousQuestions', None)
-    quizCategory = body.get('quizCategory', None)
-
-    if quizCategory:
-      if quizCategory['id'] == 0:
-        quiz = Question.query.all()
+      if category_id == 0:
+        questions = Question.query.filter(Question.id.notin_(previous_questions)).all()
       else:
-        quiz = Question.query.filter_by(category=quizCategory['id']).all()
-    if not quiz:
+        questions = Question.query.filter(
+          Question.id.notin_(previous_questions),
+          Question.category == category_id).all()
+      question = None
+      if(questions):
+        question = random.choice(questions)
+
+      return jsonify({
+        'success': True,
+        'question': question.format()
+      })
+
+    except Exception:
       abort(422)
-    selected = []
-    for question in quiz:
-      if question.id not in previousQuestions:
-        selected.append(question.format())
-    if len(selected) != 0:
-      result = random.choice(selected)
-      return jsonify({
-        'question': result
-      })
-    else:
-      return jsonify({
-        'question': False
-      })
 
 
 

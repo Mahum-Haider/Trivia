@@ -201,20 +201,31 @@ def create_app(test_config=None):
       category_id = quiz_category['id']
 
       if category_id == 0:
-        questions = Question.query.filter(Question.id.notin_(previous_questions)).all()
+        questions_query = Question.query.filter(Question.id.notin_(previous_questions)).all()
+
       else:
-        questions = Question.query.filter(
+        questions_query = Question.query.filter(
           Question.id.notin_(previous_questions),
           Question.category == category_id).all()
-      if(questions):
-        question = random.choice(questions)
 
-      return jsonify({
-        'success': True,
-        'question': question.format()
-      })
+      questions = [question.format() for question in questions_query]
 
-    except Exception:
+      if len(questions) == 0:
+        return jsonify({
+          'success': True,
+          'question': None
+        }), 200
+
+      random_question = random.choice(questions)
+
+      if random_question:
+        return jsonify({
+          'success': True,
+          'question': random_question
+        }), 200
+
+
+    except:
       abort(422)
 
 

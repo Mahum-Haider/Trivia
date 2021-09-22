@@ -127,12 +127,12 @@ def create_app(test_config=None):
     new_answer = body.get("answer", None)
     new_category = body.get("category", None)
     new_difficulty = body.get("difficulty", None)
-    search = body.get('search', None)
+    search = body.get('searchTerm', None)
     
     try:
       if search:
         selection = Question.query.order_by(Question.id).filter(
-                    Question.title.ilike("%{}%".format(search))
+                    Question.question.ilike("%{}%".format(search))
         )
         current_questions = paginate_questions(request, selection)
 
@@ -206,7 +206,6 @@ def create_app(test_config=None):
         questions = Question.query.filter(
           Question.id.notin_(previous_questions),
           Question.category == category_id).all()
-      question = None
       if(questions):
         question = random.choice(questions)
 

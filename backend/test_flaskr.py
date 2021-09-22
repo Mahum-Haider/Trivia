@@ -3,6 +3,7 @@ import unittest
 import json
 from flask_sqlalchemy import SQLAlchemy
 
+from settings import DB_NAME, DB_USER, DB_PASSWORD
 from flaskr import create_app
 from models import setup_db, Question, Category
 
@@ -89,21 +90,40 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data["deleted"], 11)
         self.assertTrue(data["total_questions"])
         self.assertTrue(len(data["questions"]))
-        self.assertEqual(question, None)
 
-    
-    #Create Questions
-    def test_create_new_question(self):
-        res = self.client().post("/questions", json=self.new_question)
+
+    # Add Questions
+    def test_create_question(self):
+        test_question = {'question': 'test question', 'answer': 'test answer', 'category': '1', 'difficulty': '1'}
+        res = self.client().post('/questions', json=test_question)
         data = json.loads(res.data)
-        pass
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['total_questions'])
+
+
+    #Retrieve Questions based on Categories
+    def test_create_new_question(self):
+        res = self.client().get('/categories/1/questions')
+        data = json.loads(res.data)
+        
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['questions'])
+        self.assertTrue(data['total_questions'])
+    
         
 
     #Play Quiz
     def tes_quiz_question(self):
-        res = self.client().post("/questions", json=self.input_data)
+        res = self.client().post("/quizzes", json=self.input_data)
         data = json.loads(res.data)
-        pass
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['question'])
+
 
 
 # Make the tests conveniently executable

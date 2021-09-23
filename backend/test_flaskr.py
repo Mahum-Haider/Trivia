@@ -103,14 +103,14 @@ class TriviaTestCase(unittest.TestCase):
 
     #Delete Questions
     def test_delete_question(self):
-        res = self.client().delete("/questions/18")
+        res = self.client().delete("/questions/10")
         data  = json.loads(res.data)
 
-        question = Question.query.filter(Question.id == 18).one_or_none()
+        question = Question.query.filter(Question.id == 10).one_or_none()
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data["success"], True)
-        self.assertEqual(data["deleted"], 18)
+        self.assertEqual(data["deleted"], 10)
         self.assertTrue(data["total_questions"])
         self.assertTrue(len(data["questions"]))
 
@@ -167,19 +167,21 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'resource not found')
         
 
-
-    #Play Quiz
-    def tes_quiz_question(self):
-        res = self.client().post("/quizzes", json=self.input_data)
+    # Test created for play_quiz.
+    def test_play_quiz(self):
+        test_question = {'quiz_category': {'type': 'Entertainment', 'id': 5},'previous_questions': ['1']}
+        res = self.client().post('/quizzes', json=test_question)
         data = json.loads(res.data)
+        quiz = Question.query.filter_by(category="1").all()
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
         self.assertTrue(data['question'])
 
     #Play Quiz failure
-    def tes_quiz_question_failure(self):
-        res = self.client().post("/quizzes", json=self.input_data)
+    def test_quiz_question_failure(self):
+        test_question = {'quiz_category': {'type': 'Entertainment', 'id': 5},'previous_questions': ['1']}
+        res = self.client().post('/quizzes/', json=test_question)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 404)

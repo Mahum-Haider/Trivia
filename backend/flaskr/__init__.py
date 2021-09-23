@@ -193,13 +193,15 @@ def create_app(test_config=None):
     # Create a POST endpoint to get questions to play the quiz.
   @app.route('/quizzes', methods=['POST'])
   def get_quizzes():
-        # This endpoint should take category and previous question parameters
-    try:
-      body = request.get_json()
-      previous_questions = body.get('previous_questions', None)
-      quiz_category = body.get('quiz_category', None)
-      category_id = quiz_category['id']
+    body = request.get_json()
+    previous_questions = body.get('previous_questions', None)
+    quiz_category = body.get('quiz_category', None)
+    category_id = quiz_category['id']
 
+    if ((quiz_category is None) or (previous_questions is None)):
+      abort(404)
+
+    try:
       if category_id == 0:
         questions_query = Question.query.filter(Question.id.notin_(previous_questions)).all()
 
@@ -224,13 +226,13 @@ def create_app(test_config=None):
           'question': random_question
         }), 200
 
-
     except:
       abort(422)
 
 
 
   # Create error handlers for all expected errors including 404 and 422. 
+  # Error code 404 handler 
   @app.errorhandler(404)
   def not_found(error):
     return (
@@ -238,7 +240,7 @@ def create_app(test_config=None):
       404,
     )
       
-
+  # Error code 422handler 
   @app.errorhandler(422)
   def unprocessable(error):
     return (
@@ -246,7 +248,7 @@ def create_app(test_config=None):
       422,
     )
 
-        
+  # Error code 400 handler 
   @app.errorhandler(400)
   def bad_request(error):
     return (
@@ -254,6 +256,7 @@ def create_app(test_config=None):
       400,
     )
 
+  # Error code 405 handler 
   @app.errorhandler(405)
   def not_allowed(error):
     return (

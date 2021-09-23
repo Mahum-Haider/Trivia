@@ -3,7 +3,7 @@ import unittest
 import json
 from flask_sqlalchemy import SQLAlchemy
 
-from settings import DB_NAME, DB_USER, DB_PASSWORD
+# from settings import DB_NAME, DB_USER, DB_PASSWORD
 from flaskr import create_app
 from models import setup_db, Question, Category
 
@@ -48,7 +48,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data["success"], True)
         self.assertTrue(data["total_questions"])
         self.assertTrue(len(data["questions"]))
-
+ 
     #Paginated questions failure
     def test_get_paginated_questions_failure(self):
         res = self.client().get("/questions?page=1000")
@@ -71,12 +71,12 @@ class TriviaTestCase(unittest.TestCase):
 
     #Retrieve Categories for failure 
     def test_retrieve_categories_failure(self):
-        res = self.client().get("/categories")
+        res = self.client().get("/categories/")
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'Not found')
+        self.assertEqual(data['message'], 'resource not found')
 
 
 
@@ -92,36 +92,36 @@ class TriviaTestCase(unittest.TestCase):
 
     #Retrieve Questions for failure
     def test_retrieve_questions_failure(self):
-        res = self.client().get("/questions")
+        res = self.client().get("/questions/")
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data["success"], False)
-        self.assertEqual(data['message'], 'Not found')
+        self.assertEqual(data['message'], 'resource not found')
 
 
 
     #Delete Questions
     def test_delete_question(self):
-        res = self.client().delete("/questions/11")
+        res = self.client().delete("/questions/18")
         data  = json.loads(res.data)
 
-        question = Question.query.filter(Question.id == 11).one_or_none()
+        question = Question.query.filter(Question.id == 18).one_or_none()
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data["success"], True)
-        self.assertEqual(data["deleted"], 11)
+        self.assertEqual(data["deleted"], 18)
         self.assertTrue(data["total_questions"])
         self.assertTrue(len(data["questions"]))
 
     #Delete Questions for failure
     def test_delete_question_failure(self):
-        res = self.client().delete("/questions/11")
+        res = self.client().delete("/questions/")
         data  = json.loads(res.data)
 
-        self.assertEqual(res.status_code, 422)
+        self.assertEqual(res.status_code, 404)
         self.assertEqual(data["success"], False)
-        self.assertEqual(data['message'], 'Unprocessable entity')
+        self.assertEqual(data['message'], 'resource not found')
 
 
 
@@ -138,35 +138,12 @@ class TriviaTestCase(unittest.TestCase):
     # Add Questions for failure
     def test_create_question_failure(self):
         test_question = {'question': 'test question', 'answer': 'test answer', 'category': '1', 'difficulty': '1'}
-        res = self.client().post('/questions', json=test_question)
+        res = self.client().post('/questions/')
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data["success"], False)
-        self.assertEqual(data['message'], 'Not found')
-
-
-
-    # Search Questions
-    def test_search_questions(self):
-        test_search = {'searchTerm': 'a'}
-        res = self.client().post('/questions/search', json=test_search)
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(data['success'], True)
-        self.assertTrue(data['questions'])
-        self.assertTrue(data['total_questions'])
-
-    # Search Questions failure.
-    def test_search_questions_failure(self):
-        test_search = {'searchTerm': 'a'}
-        res = self.client().post('/questions/', json=test_search)
-        data = json.loads(res.data)
-
-        self.assertEqual(res.status_code, 404)
-        self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'Not found.')
+        self.assertEqual(data['message'], 'resource not found')
 
 
 
@@ -182,12 +159,12 @@ class TriviaTestCase(unittest.TestCase):
 
     #Retrieve Questions based on Categories failure
     def test_create_new_question_failure(self):
-        res = self.client().get('/categories/1/questions')
+        res = self.client().get('/categories/questions/')
         data = json.loads(res.data)
         
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data["success"], False)
-        self.assertEqual(data['message'], 'Not found')
+        self.assertEqual(data['message'], 'resource not found')
         
 
 
@@ -207,7 +184,7 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'Not found.')
+        self.assertEqual(data['message'], 'resource not found')
 
 
 
